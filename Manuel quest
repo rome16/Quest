@@ -1,0 +1,247 @@
+// ===== rAthena Script =======================================
+// = Tienda de búsqueda de Euphy
+// ===== Por: ========================================= =========
+// = Euphy
+// ===== Versión actual: =====================================
+// = 1.6c
+// ===== Compatible con: =====================================
+// = Proyecto rAthena
+// ===== Descripción: =========================================
+// = Una tienda de búsqueda dinámica basada en Lunar, con una configuración más fácil.
+// = Incluye soporte para múltiples tiendas y cajeros.
+// = Script de vista previa del elemento por ToastOfDoom.
+// ===== Comentarios adicionales: =================================
+// = 1.0 Script inicial.
+// = 1.2 Soporte de categoría agregado.
+// = 1.3 Más opciones y correcciones.
+// = 1.4 Configuraciones de depuración agregadas.
+// = 1.5 Categorías reemplazadas con ID de tienda.
+// = 1.6 Se agregó soporte para comprar apilables.
+// = 1.6a Se agregó soporte para previsualizar disfraces y túnicas.
+// = 1.6b Se agregó el comando 'disable_items'.
+// = 1.6c Se reemplazó la función 'A_An' con "F_InsertArticle".
+// ================================================ ============
+
+// Comprar NPC: al no proporcionar ningún argumento, se muestra todo el menú.
+// callfunc "qshop" {, <ID de tienda> {, <ID de tienda> {, ...}}};
+// AGREGA TU NPC AQUÍ
+// ================================================ ============
+prontera, 164,203,6 script Quest Shop # 1 998, {callfunc "qshop"; }
+// prontera, 165,203,6 script Quest Shop # 2 998, {callfunc "qshop", 1,2; } // llama a la tienda 1 y 2 que se definen a continuación
+// etc .. Agrega tu tienda NPCs 'Quest Shop # XXX' aquí
+// ================================================ ============
+
+
+// Script Core - NO DUPLICES ESTE NPC !!!!!!!!!!!!!
+// ================================================ ============
+- script quest_shop -1, {
+función Agregar; función Chk; Ranura de función;
+OnInit:
+	freeloop (1);
+
+// ------------------------------------------------ -----------
+// Configuración básica de la tienda.
+// ------------------------------------------------ -----------
+
+	conjunto. Anuncie, 1; // ¿Anunciar la finalización de la misión? (1: sí / 0: no)
+	establecer .ShowSlot, 1; // ¿Mostrar espacios de elementos? (2: todo el equipo / 1: si las ranuras> 0/0: nunca)
+	establecer .ShowID, 0; // ¿Mostrar ID de artículo? (1: sí / 0: no)
+	establecer .ShowZeny, 0; // ¿Mostrar el costo de Zeny, si lo hay? (1: sí / 0: no)
+	conjunto .MaxStack, 100; // Número máximo de artículos de búsqueda comprados a la vez.
+
+// ------------------------------------------------ -----------
+// Puntos variables: requisito de búsqueda opcional.
+// setarray .Points $ [0], "<nombre de variable>", "<nombre para mostrar>";
+// ------------------------------------------------ -----------
+
+	setarray .Points $ [0],
+		"#CASHPOINTS", "Cash Points";
+
+
+// ================================================ =====================================
+// ------------------- AGREGA TU NOMBRE DE TIENDAS Y ARTÍCULOS TIENDAS COMENZANDO AQUÍ --------------
+// ================================================ =====================================
+
+// ------------------------------------------------ -----------
+// ID de tienda: para agregar tiendas, copie datos ficticios en la parte inferior del archivo.
+// setarray .Tiendas $ [1], "<Tienda 1>", "<Tienda 2>" {, ...};
+// ------------------------------------------------ -----------
+
+	setarray .Tiendas $ [1],
+		"Sombreros", // Tienda nombrada 1
+		"Armas", // Tienda nombrada 2
+		"Otro"; // Tienda llamada 3
+
+// ------------------------------------------------ -----------
+// Objetos de misión: ¡NO uses un objeto de recompensa más de una vez!
+// Añadir (<ID de tienda>, <ID de recompensa>, <cantidad de recompensa>,
+// <coste Zeny>, <coste punto>,
+// <ID de artículo requerido>, <cantidad de artículo requerido> {, ...});
+// ------------------------------------------------ -----------
+
+// Tienda 1
+	Agregar (1,5022,1,0,0,7086,1,969,10,999,40,1003,50,984,2);
+	Agregar (1,5032,1,0,0,1059,250,2221,1,2227,1,7063,600);
+	Agregar (1,5027,1,0,0,2252,1,1036,400,7001,50,4052,1);
+	Agregar (1,5045,1,0,0,2252,1,1054,450,943,1200);
+
+// Tienda 2
+	Agregar (2,1224,1,0,0,7297,30,969,10,999,50,714,10);
+	Agregar (2,1225,1,0,0,7292,30,969,10,999,50,714,10);
+
+// Tienda 3
+	Agregar (3,531,1,3,0,512,1,713,1);
+	Agregar (3,532,1,3,0,513,1,713,1);
+	Agregar (3,533,1,3,0,514,1,713,1);
+	Agregar (3,534,1,3,0,515,1,713,1);
+
+// ------------------------------------------------ -----------
+
+// ================================================ =====================================
+// ------------------- SUS TIENDAS Y TIENDAS DE ARTÍCULOS SE HAN AGREGADO ---------------------
+// ================================================ =====================================
+
+	freeloop (0);
+	set .menu $, "";
+	for (set. @ i, 1;. @ i <= getarraysize (.Shops $); set. @ i,. @ i + 1) {
+		set .menu $, .menu $ +. Tiendas $ [. @ i] + ":";
+		npcshopdelitem "qshop" +. @ i, 909;
+	}
+	final;
+
+OnMenu:
+	set. @ size, getarraysize (@i);
+	si (!. @ size) establece @shop_index, seleccione (.menu $);
+	de lo contrario, si (. @ size == 1) establece @shop_index, @i [0];
+	más {
+		para (set. @ j, 0;. @ j <. @ size; set. @ j,. @ j + 1)
+			set. @ menu $,. @ menu $ +. Tiendas $ [@ i [. @ j]] + ":";
+		establecer @shop_index, @i [seleccionar (. @ menu $) - 1];
+	}
+	deletearray @i [0], getarraysize (@i);
+	if (.Shops $ [@ shop_index] == "") {
+		mensaje strcharinfo (0), "Ha ocurrido un error";
+		final;
+	}
+	dispbottom "Seleccione un elemento a la vez";
+	callshop "qshop" + @ shop_index, 1;
+	npcshopattach "qshop" + @ shop_index;
+	final;
+
+OnBuyItem:
+	//. @ q []: RewardID, BoughtAmt, RewardAmt, BaseAmt, ReqZeny, ReqPts, {ReqItem, ReqAmt, ...}
+	setarray. @ q [0], @ adquirido_nombre [0], ((@ comprado_cantidad [0]> .MaxStack)? MaxStack: @ comprado_quantidad [0]);
+	copyarray. @ q [3], getd (". q _" + @ shop_index + "_" +. @ q [0] + "[0]"), getarraysize (getd (". q _" + @ shop_index + "_" + . @ q [0]));
+	conjunto. @ q [2],. @ q [1] *. @ q [3];
+	if (!. @ q [2] ||. @ q [2]> 30000) {
+		mensaje strcharinfo (0), "No puede comprar tantos" + getitemname (. @ q [0]) + ".";
+		final;
+	}
+	mes "[Tienda de búsqueda]";
+	mes "Recompensa: ^ 0055FF" + ((. @ q [2]> 1)?. @ q [2] + "x": "") + Ranura (. @ q [0]) + "^ 000000";
+	mes "Requisitos:";
+	disable_items;
+	if (. @ q [4]) mes ">" + Chk (Zeny,. @ q [4] *. @ q [1]) + (. @ q [4] *. @ q [1]) + " Zeny ^ 000000 ";
+	if (. @ q [5]) mes ">" + Chk (getd (.Points $ [0]),. @ q [5] *. @ q [1]) + (. @ q [5] *. @q [1]) + "" + .Points $ [1] + "(" + getd (.Points $ [0]) + "/" + (. @ q [5] *. @ q [1]) + ") ^ 000000";
+	if (. @ q [6]) for (set. @ i, 6;. @ i <getarraysize (. @ q); set. @ i,. @ i + 2)
+		mes ">" + Chk (countitem (. @ q [. @ i]),. @ q [. @ i + 1] *. @ q [1]) + ((. ShowID)? "{" +. @ q [. @ i] + "}": "") + Ranura (. @ q [. @ i]) + "(" + countitem (. @ q [. @ i]) + "/" + (. @ q [. @ i + 1] *. @ q [1]) + ") ^ 000000";
+	siguiente;
+	setarray @qe [1], getiteminfo (. @ q [0], 5), getiteminfo (. @ q [0], 11);
+	if (@qe [2]> 0 && ((@qe [1] & EQP_HEAD_LOW) || (@qe [1] & EQP_HEAD_TOP) || (@qe [1] & EQP_HEAD_MID) || (@qe [1] & EQP_COSTUME_HEAD_TOP) || (@qe [1] & EQP_COSTUME_HEAD_MID) || (@qe [1] & EQP_COSTUME_HEAD_LOW) || (@qe [1] & EQP_GARMENT) || (@QE [1]) EQ__C)
+		set. @ preview, 1;
+	addtimer 1000, strnpcinfo (0) + ":: OnEnd";
+	mientras que (1) {
+		interruptor (seleccione ("~ Compra ^ 0055FF" + getitemname (. @ q [0]) + "^ 000000:" + ((. @ vista previa &&! @qe [7])? "~ Vista previa ...": " ") +": ~ ^ 777777Cancelar ^ 000000 ")) {
+		caso 1:
+			if (@qe [0]) {
+				mes "[Tienda de búsqueda]";
+				mes "Te faltan uno o más requisitos de búsqueda";
+				cerrar;
+			}
+			if (! checkweight (. @ q [0],. @ q [2])) {
+				mes "[Tienda de búsqueda]";
+				mes "^ FF0000 Usted necesita" + (((. @ q [2] * getiteminfo (. @ q [0], 6)) + Weight-MaxWeight) / 10) + "capacidad de peso adicional para completar este comercio. ^ 000000" ;
+				cerrar;
+			}
+			if (. @ q [4]) establece Zeny, Zeny - (. @ q [4] *. @ q [1]);
+			if (. @ q [5]) setd .Points $ [0], getd (.Points $ [0]) - (. @ q [5] *. @ q [1]);
+			if (. @ q [6]) for (set. @ i, 6;. @ i <getarraysize (. @ q); set. @ i,. @ i + 2)
+				delitem. @ q [. @ i],. @ q [. @ i + 1] *. @ q [1];
+			getitem. @ q [0],. @ q [2];
+			si (.Announce) anuncia strcharinfo (0) + "ha creado" + ((. @ q [2]> 1)?. @ q [2] + "x" + getitemname (. @ q [0]): callfunc ("F_InsertArticle", getitemname (. @ Q [0]))) + "!", 0;
+			specialeffect2 EF_FLOWERLEAF;
+			cerrar;
+		caso 2:
+			setarray @qe [3], getlook (LOOK_HEAD_BOTTOM), getlook (LOOK_HEAD_TOP), getlook (LOOK_HEAD_MID), getlook (LOOK_ROBE), 1;
+			if ((@qe [1] & 1) || (@qe [1] & 4096)) changelook LOOK_HEAD_BOTTOM, @qe [2];
+			más si ((@qe [1] y 256) || (@qe [1] y 1024)) changelook LOOK_HEAD_TOP, @qe [2];
+			más si ((@qe [1] & 512) || (@qe [1] & 2048)) changelook LOOK_HEAD_MID, @qe [2];
+			si no ((@qe [1] & 4) || (@qe [1] & 8192)) changelook LOOK_ROBE, @qe [2];
+			descanso;
+		caso 3:
+			cerrar;
+		}
+	}
+
+OnEnd:
+	if (@qe [7]) {
+		changelook LOOK_HEAD_BOTTOM, @qe [3];
+		changelook LOOK_HEAD_TOP, @qe [4];
+		changelook LOOK_HEAD_MID, @qe [5];
+		changelook LOOK_ROBE, @qe [6];
+	}
+	deletearray @qe [0], 8;
+	final;
+
+función Agregar {
+	if (getitemname (getarg (1)) == "nulo") {
+		depura "Recompensa de misión #" + getarg (1) + "no válido (omitido)";
+		regreso;
+	}
+	setarray. @ j [0], getarg (2), getarg (3), getarg (4);
+	para (set. @ i, 5;. @ i <getargcount (); set. @ i,. @ i + 2) {
+		if (getitemname (getarg (. @ i)) == "nulo") {
+			debugmes "Quest requisito #" + getarg (. @ i) + "no válido (omitido)";
+			regreso;
+		} más
+			setarray. @ j [. @ i-2], getarg (. @ i), getarg (. @ i + 1);
+	}
+	copyarray getd (". q _" + getarg (0) + "_" + getarg (1) + "[0]"),. @ j [0], getarraysize (. @ j);
+	npcshopadditem "qshop" + getarg (0), getarg (1), ((. ShowZeny)? getarg (3): 0);
+	regreso;
+}
+
+función Chk {
+	if (getarg (0) <getarg (1)) {
+		establecer @qe [0], 1;
+		devuelve "^ FF0000";
+	} más
+		devuelve "^ 00FF00";
+}
+
+función Slot {
+	set. @ s $, getitemname (getarg (0));
+	interruptor (.ShowSlot) {
+		caso 1: if (! getitemslots (getarg (0))) return. @ s $;
+		caso 2: if (getiteminfo (getarg (0), 2) == 4 || getiteminfo (getarg (0), 2) == 5) return. @ s $ + "[" + getitemslots (getarg (0)) + "]";
+		valor predeterminado: return. @ s $;
+	}
+}
+}
+
+script de función qshop {
+	deletearray @i [0], getarraysize (@i);
+	para (set. @ i, 0;. @ i <getargcount (); set. @ i,. @ i + 1)
+		establecer @i [. @ i], getarg (. @ i);
+	evento "quest_shop :: OnMenu";
+	final;
+}
+
+
+// Datos ficticios de la tienda: copie según sea necesario.
+// ================================================ ============
+- tienda qshop1 -1,909: -1
+- tienda qshop2 -1,909: -1
+- tienda qshop3 -1,909: -1
+- tienda qshop4 -1,909: -1
+- tienda qshop5 -1,909: -1
